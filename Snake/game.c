@@ -64,6 +64,7 @@ BOOL CheckCollission()
 		push(player.pos);
 		food.x = RandomInt10(0, BufferWidth - FoodWidth);
 		food.y = RandomInt10(0, BufferHeight - FoodHeight);
+		//just ate, no need for collission
 		skipNextCollission = TRUE;
 		player.length++;
 	}
@@ -99,6 +100,7 @@ int CalculateScreen(float timestep)
 
 	memset(BackBuffer, 0xFF, BufferWidth * BufferHeight * 4); //4 = size of integer
 
+	//move player
 	switch (player.direction)
 	{
 	case Down:
@@ -114,6 +116,7 @@ int CalculateScreen(float timestep)
 		player.pos.x += FoodWidth;
 		break;
 	}
+	//push new head
 	push(player.pos);
 	//draw
 	for (int i = 1; i < queue.count + 1; i++)
@@ -124,6 +127,7 @@ int CalculateScreen(float timestep)
 
 	BOOL lost = CheckCollission();
 
+	//pop back square of body
 	pop();
 	//draw food :)
 	DrawRect(food.x, food.y, FoodWidth, FoodHeight, 0, BackBuffer, BufferWidth, BufferHeight);
@@ -137,11 +141,6 @@ int CalculateScreen(float timestep)
 
 	return lost;
 }
-
-//TA DA! It took me THREE days to get the snake body to work... all because I was iterating the wrong way on my queue... haha. The smallest mistakes... oh well! It's complete now. Maybe
-//later I'll make a tutorial on a basic snake game in C, and that's C not C++ :)
-//have a good day, I'll start recording these with voice once I feel like it. 
-//source is on GitHub in the description
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
