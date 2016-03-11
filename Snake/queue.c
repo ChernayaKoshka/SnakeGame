@@ -12,18 +12,6 @@ BOOL push(POINT p)
 	return TRUE;
 }
 
-/*
-	[0][1][2][3][4]
-	[o][x][o][o][o]
-
-	front = 0
-	count = 4
-	int index = 0;
-
-	for(int i = ; i ; i)
-
-*/
-
 POINT pop()
 {
 	POINT toReturn = { -1 };
@@ -34,16 +22,6 @@ POINT pop()
 	queue.count--;
 	return toReturn;
 }
-
-//front = 3
-//count = 5
-//[0][1][2][3][4]
-//index should be 2
-
-//front = 4
-//count = 2
-//[0][1][2][3][4]
-//index should be 0
 
 int CalculateIndex(int count)
 {

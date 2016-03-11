@@ -51,6 +51,7 @@ BOOL CheckCollission()
 {
 	//border check
 
+	//I have no idea why, but the width needs to be at least 120 to keep this check from freaking out......
 	if (player.pos.x < 0 || player.pos.x > BufferWidth - FoodWidth)
 		return FALSE;
 
@@ -90,7 +91,7 @@ BOOL CheckCollission()
 
 int CalculateScreen(float timestep)
 {
-	wchar_t buf[100];
+	wchar_t buf[20];
 	swprintf_s(buf, 20, L"Score: %d", player.length);
 	int len = lstrlenW((LPCWSTR)&buf);
 	TextOutW(dcWindow, 0, 0, (LPCWSTR)&buf, len);

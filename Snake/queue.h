@@ -5,8 +5,6 @@
 
 #define MaxQueueSize (BufferWidth*BufferHeight)/10
 
-//#define MaxQueueSize 5
-
 typedef struct tagQueue
 {
 	POINT stackArray[MaxQueueSize];

@@ -3,8 +3,8 @@
 #define FoodWidth 10
 #define FoodHeight 10
 
-#define BufferWidth 640
-#define BufferHeight 480
+#define BufferWidth 120
+#define BufferHeight 100
 
 typedef struct tagSnake
 {
