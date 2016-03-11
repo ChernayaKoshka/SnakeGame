@@ -45,3 +45,5 @@
 *.sdf
 *.opensdf
 *.vs/
+Snake/log.txt
+*.opendb
