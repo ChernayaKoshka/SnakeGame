@@ -2,34 +2,14 @@
 #include <stdio.h>
 #include "math_custom.h"
 #include "drawing.h"
-
-
-#define FoodWidth 10
-#define FoodHeight 10
+#include "game.h"
+#include "queue.h"
 
 BOOL Running = TRUE;
 
-typedef struct tagSnake 
-{
-	POINT pos;
-	int direction;
-	int length;
-}Snake_t;
-
-POINT food = { 0 };
-
-typedef enum eDirection
-{
-	Down = 0,
-	Up = 1,
-	Left = 2,
-	Right = 3
-};
-
 static Snake_t player = { 0 };
 
-int BufferWidth = 640;;
-int BufferHeight = 480;
+POINT food = { .x = 50,.y = 50 };
 
 int* BackBuffer;
 
@@ -67,8 +47,56 @@ float Sys_FloatTime()
 	return (float)GTimePassed;
 }
 
+BOOL CheckCollission()
+{
+	//border check
+
+	if (player.pos.x < 0 || player.pos.x > BufferWidth - FoodWidth)
+		return FALSE;
+
+	if (player.pos.y < 0 || player.pos.y > BufferHeight - FoodWidth)
+		return FALSE;
+
+	BOOL skipNextCollission = FALSE;
+	//food check
+	if (player.pos.x == food.x && player.pos.y == food.y)
+	{
+		push(player.pos);
+		food.x = RandomInt10(0, BufferWidth - FoodWidth);
+		food.y = RandomInt10(0, BufferHeight - FoodHeight);
+		skipNextCollission = TRUE;
+		player.length++;
+	}
+
+	//check for collision
+
+	if (!skipNextCollission)
+	{
+		for (int i = 1; i < queue.count+1; i++)
+		{
+			if (queue.count == 1) break;
+			int index = CalculateIndex(i)-1;
+			if (index == queue.front) continue;
+			if (player.pos.x == queue.stackArray[index].x && 
+				player.pos.y == queue.stackArray[index].y)
+			{
+				return FALSE;
+			}
+		}
+	}
+	return TRUE;
+}
+
 int CalculateScreen(float timestep)
 {
+	wchar_t buf[100];
+	swprintf_s(buf, 20, L"Score: %d", player.length);
+	int len = lstrlenW((LPCWSTR)&buf);
+	TextOutW(dcWindow, 0, 0, (LPCWSTR)&buf, len);
+
+	if (timestep < 0.15f) 
+		return TRUE;
+
 	memset(BackBuffer, 0xFF, BufferWidth * BufferHeight * 4); //4 = size of integer
 
 	switch (player.direction)
@@ -86,29 +114,17 @@ int CalculateScreen(float timestep)
 		player.pos.x += FoodWidth;
 		break;
 	}
-
-	if (player.pos.x < 0 || player.pos.x > BufferWidth-FoodWidth)
+	push(player.pos);
+	//draw
+	for (int i = 1; i < queue.count + 1; i++)
 	{
-		Running = FALSE;
-		return 0;
+		int index = CalculateIndex(i);
+		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FoodWidth, FoodHeight, 0, BackBuffer, BufferWidth, BufferHeight);
 	}
 
-	if (player.pos.y < 0 || player.pos.y>BufferHeight-FoodHeight)
-	{
-		Running = FALSE;
-		return 0;
-	}
+	BOOL lost = CheckCollission();
 
-	if (player.pos.x == food.x && player.pos.y==food.y)
-	{
-		player.length++;
-		food.x = RandomInt10(0, BufferWidth);
-		food.y = RandomInt10(0, BufferHeight);
-	}
-
-	//draw player
-	DrawRect(player.pos.x, player.pos.y, FoodWidth, FoodHeight, 0x000F707F, BackBuffer, BufferWidth, BufferHeight);
-
+	pop();
 	//draw food :)
 	DrawRect(food.x, food.y, FoodWidth, FoodHeight, 0, BackBuffer, BufferWidth, BufferHeight);
 
@@ -119,26 +135,15 @@ int CalculateScreen(float timestep)
 		BackBuffer, &BitMapInfo,
 		DIB_RGB_COLORS, SRCCOPY);
 
-
-	//debug
-	wchar_t buf[100];
-	swprintf_s(buf, 20, L"Score: %d", player.length);
-	int len = lstrlenW(&buf);
-	TextOutW(dcWindow, 0, 0, &buf, len);
-
-	/*swprintf_s(buf, 20, L"Food X: %d", food.x);
-	len = lstrlenW(&buf);
-	TextOutW(dcWindow, 0, 20, &buf, len);
-
-	swprintf_s(buf, 20, L"Food Y: %d", food.y);
-	len = lstrlenW(&buf);
-	TextOutW(dcWindow, 0, 40, &buf, len);*/
-	//end debug
-
-	return TRUE;
+	return lost;
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, WPARAM lParam)
+//TA DA! It took me THREE days to get the snake body to work... all because I was iterating the wrong way on my queue... haha. The smallest mistakes... oh well! It's complete now. Maybe
+//later I'll make a tutorial on a basic snake game in C, and that's C not C++ :)
+//have a good day, I'll start recording these with voice once I feel like it. 
+//source is on GitHub in the description
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT Result = 0;
 
@@ -167,8 +172,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, WPARAM lParam)
 	case WM_ERASEBKGND:
 		return TRUE;
 	case WM_CLOSE:
-		Running = FALSE;
-		return Result;
+		exit(0);
+	case WM_QUIT:
+		exit(0);
+		break;
 	case WM_COMMAND:
 		return Result;
 	case WM_PAINT:
@@ -231,9 +238,15 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nShowCmd, int width, int height)
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
+	#if DEBUG
+		OpenLog();
+	#endif
 
 	if (!CreateGameWindow(hInstance, nShowCmd, BufferWidth, BufferHeight))
 		return EXIT_FAILURE;
+
+	food.x = RandomInt10(0, BufferWidth - FoodWidth);
+	food.y = RandomInt10(0, BufferHeight - FoodHeight);
 
 	Sys_InitFloatTime();
 
@@ -251,11 +264,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 
 		float NewTime = Sys_FloatTime();
-		if (NewTime-PrevTime > 0.15) 
-		{
-			CalculateScreen(NewTime - PrevTime);
-			PrevTime = NewTime;
-		}
+		Running = CalculateScreen(NewTime - PrevTime);
+
+		//put check inside CalculateScreen() later... v
+		if(NewTime-PrevTime>0.15f)PrevTime = NewTime;
 	}
 
 	return EXIT_SUCCESS;
