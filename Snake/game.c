@@ -5,17 +5,21 @@
 #include "game.h"
 #include "queue.h"
 
+#define TIMESTEP 0.1f
+
 BOOL Running = TRUE;
 
 static Snake_t player = { 0 };
 
-POINT food = { .x = 50,.y = 50 };
+POINT food = { 0 };
 
 int* BackBuffer;
 
 BITMAPINFO BitMapInfo = { 0 };
 
 HDC dcWindow = 0;
+
+BOOL lockDirection = FALSE;
 
 static double GTimePassed = 0;
 static float SecondsPerTick = 0;
@@ -94,9 +98,12 @@ int CalculateScreen(float timestep)
 	wchar_t buf[20];
 	swprintf_s(buf, 20, L"Score: %d", player.length);
 	int len = lstrlenW((LPCWSTR)&buf);
-	TextOutW(dcWindow, 0, 0, (LPCWSTR)&buf, len);
+	int xPos = 0;
+	if (food.x > 0 && food.x < 50 && food.y == 0)
+		xPos = 50;
+	TextOutW(dcWindow, xPos, 0, (LPCWSTR)&buf, len);
 
-	if (timestep < 0.15f) 
+	if (timestep < TIMESTEP) 
 		return TRUE;
 
 	memset(BackBuffer, 0xFF, BufferWidth * BufferHeight * 4); //4 = size of integer
@@ -117,12 +124,13 @@ int CalculateScreen(float timestep)
 		player.pos.x += FoodWidth;
 		break;
 	}
+	lockDirection = FALSE;
 	//push new head
 	push(player.pos);
 	//draw
-	for (int i = 1; i < queue.count + 1; i++)
+	for (int i = 0; i < queue.count; i++)
 	{
-		int index = CalculateIndex(i);
+		int index = CalculateIndex(i+1);
 		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FoodWidth, FoodHeight, 0, BackBuffer, BufferWidth, BufferHeight);
 	}
 
@@ -150,19 +158,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_KEYDOWN:
+		if (lockDirection && wParam != VK_ESCAPE) return;
 		switch (wParam)
 		{
 		case VK_LEFT:
-			player.direction = Left;
+			if (player.direction != Right)
+			{
+				lockDirection = TRUE;
+				player.direction = Left;
+			}
 			break;
 		case VK_RIGHT:
-			player.direction = Right;
+			if (player.direction != Left)
+			{
+				lockDirection = TRUE;
+				player.direction = Right;
+			}
 			break;
 		case VK_UP:
-			player.direction = Up;
+			if (player.direction != Down)
+			{
+				lockDirection = TRUE;
+				player.direction = Up;
+			}
 			break;
 		case VK_DOWN:
-			player.direction = Down;
+			if (player.direction != Up) 
+			{
+				lockDirection = TRUE;
+				player.direction = Down;
+			}
 			break;
 		case VK_ESCAPE:
 			Running = FALSE;
@@ -267,7 +292,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		Running = CalculateScreen(NewTime - PrevTime);
 
 		//put check inside CalculateScreen() later... v
-		if(NewTime-PrevTime>0.15f)PrevTime = NewTime;
+		if(NewTime-PrevTime>TIMESTEP)PrevTime = NewTime;
 	}
 
 	return EXIT_SUCCESS;
