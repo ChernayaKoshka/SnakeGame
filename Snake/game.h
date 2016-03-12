@@ -1,10 +1,12 @@
 #pragma once
 
-#define FoodWidth 10
-#define FoodHeight 10
+#define FOOD_WIDTH 10
+#define FOOD_HEIGHT 10
 
-#define BufferWidth 320
-#define BufferHeight 300
+#define BUFFER_WIDTH 320
+#define BUFFER_HEIGHT 300
+
+#define TIMESTEP 0.1f
 
 typedef struct tagSnake
 {

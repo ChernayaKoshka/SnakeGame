@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include "game.h"
 
-#define MaxQueueSize (BufferWidth*BufferHeight)/10
+#define MaxQueueSize (BUFFER_WIDTH*BUFFER_HEIGHT)/FOOD_WIDTH
 
 typedef struct tagQueue
 {
@@ -18,5 +18,5 @@ BOOL push(POINT p);
 POINT pop();
 
 int CalculateIndex(int count);
-void TestCalculateIndex2(int count);
+void LogCalculateIndex(int count);
 void OpenLog();

@@ -26,7 +26,7 @@ POINT pop()
 int CalculateIndex(int count)
 {
 	#if DEBUG
-		TestCalculateIndex2(count);
+		LogCalculateIndex(count);
 	#endif
 	if (queue.front - count + 1 < 0)
 		return MaxQueueSize + queue.front - count + 1;
@@ -45,7 +45,7 @@ void OpenLog()
 	fopen_s(&fp, "log.txt", "w");
 }
 
-void TestCalculateIndex2(int count)
+void LogCalculateIndex(int count)
 {
 	char* fmt = "Front: %d\r\nCount: %d\r\nIndex: %d\r\n";
 

@@ -5,8 +5,6 @@
 #include "game.h"
 #include "queue.h"
 
-#define TIMESTEP 0.1f
-
 BOOL Running = TRUE;
 
 static Snake_t player = { 0 };
@@ -25,7 +23,7 @@ static double GTimePassed = 0;
 static float SecondsPerTick = 0;
 static __int64 GTimeCount = 0;
 
-float Sys_InitFloatTime()
+float InitFloatTime()
 {
 	LARGE_INTEGER Frequency;
 	QueryPerformanceFrequency(&Frequency);
@@ -37,7 +35,7 @@ float Sys_InitFloatTime()
 	return SecondsPerTick;
 }
 
-float Sys_FloatTime()
+float FloatTime()
 {
 	LARGE_INTEGER Counter;
 	QueryPerformanceCounter(&Counter);
@@ -70,10 +68,10 @@ BOOL CheckCollission()
 	//border check
 
 	//I have no idea why, but the width needs to be at least 120 to keep this check from freaking out......
-	if (player.pos.x < 0 || player.pos.x > BufferWidth - FoodWidth)
+	if (player.pos.x < 0 || player.pos.x > BUFFER_WIDTH - FOOD_WIDTH)
 		return FALSE;
 
-	if (player.pos.y < 0 || player.pos.y > BufferHeight - FoodWidth)
+	if (player.pos.y < 0 || player.pos.y > BUFFER_HEIGHT - FOOD_WIDTH)
 		return FALSE;
 
 	BOOL skipNextCollission = FALSE;
@@ -83,8 +81,8 @@ BOOL CheckCollission()
 		push(player.pos);
 		do
 		{
-			food.x = RandomInt(0, BufferWidth - FoodWidth, FoodWidth);
-			food.y = RandomInt(0, BufferHeight - FoodHeight, FoodHeight);
+			food.x = RandomInt(0, BUFFER_WIDTH - FOOD_WIDTH, FOOD_WIDTH);
+			food.y = RandomInt(0, BUFFER_HEIGHT - FOOD_HEIGHT, FOOD_HEIGHT);
 		} while (BodyContainsPoint(food)); //prevents spawn inside body
 
 		//just ate, no need for collission
@@ -124,22 +122,22 @@ int CalculateScreen(float timestep)
 	if (timestep < TIMESTEP)
 		return TRUE;
 
-	memset(BackBuffer, 0xFF, BufferWidth * BufferHeight * 4); //4 = size of integer
+	memset(BackBuffer, 0xFF, BUFFER_WIDTH * BUFFER_HEIGHT * 4); //4 = size of integer
 
 	//move player
 	switch (player.direction)
 	{
 	case Down:
-		player.pos.y += FoodHeight;
+		player.pos.y += FOOD_HEIGHT;
 		break;
 	case Up:
-		player.pos.y -= FoodHeight;
+		player.pos.y -= FOOD_HEIGHT;
 		break;
 	case Left:
-		player.pos.x -= FoodWidth;
+		player.pos.x -= FOOD_WIDTH;
 		break;
 	case Right:
-		player.pos.x += FoodWidth;
+		player.pos.x += FOOD_WIDTH;
 		break;
 	}
 	lockDirection = FALSE;
@@ -149,7 +147,7 @@ int CalculateScreen(float timestep)
 	for (int i = 0; i < queue.count; i++)
 	{
 		int index = CalculateIndex(i + 1);
-		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FoodWidth, FoodHeight, 0, BackBuffer, BufferWidth, BufferHeight);
+		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FOOD_WIDTH, FOOD_HEIGHT, 0, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
 	}
 
 	BOOL lost = CheckCollission();
@@ -157,12 +155,12 @@ int CalculateScreen(float timestep)
 	//pop back square of body
 	pop();
 	//draw food :)
-	DrawRect(food.x, food.y, FoodWidth, FoodHeight, 0, BackBuffer, BufferWidth, BufferHeight);
+	DrawRect(food.x, food.y, FOOD_WIDTH, FOOD_HEIGHT, 0, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
 
 	//display image
 	StretchDIBits(dcWindow,
-		0, 0, BufferWidth, BufferHeight,
-		0, 0, BufferWidth, BufferHeight,
+		0, 0, BUFFER_WIDTH, BUFFER_HEIGHT,
+		0, 0, BUFFER_WIDTH, BUFFER_HEIGHT,
 		BackBuffer, &BitMapInfo,
 		DIB_RGB_COLORS, SRCCOPY);
 
@@ -285,15 +283,15 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	OpenLog();
 #endif
 
-	if (!CreateGameWindow(hInstance, nShowCmd, BufferWidth, BufferHeight))
+	if (!CreateGameWindow(hInstance, nShowCmd, BUFFER_WIDTH, BUFFER_HEIGHT))
 		return EXIT_FAILURE;
 
-	food.x = RandomInt(0, BufferWidth - FoodWidth, FoodWidth);
-	food.y = RandomInt(0, BufferHeight - FoodHeight, FoodHeight);
+	food.x = RandomInt(0, BUFFER_WIDTH - FOOD_WIDTH, FOOD_WIDTH);
+	food.y = RandomInt(0, BUFFER_HEIGHT - FOOD_HEIGHT, FOOD_HEIGHT);
 
-	Sys_InitFloatTime();
+	InitFloatTime();
 
-	float PrevTime = Sys_InitFloatTime();
+	float PrevTime = InitFloatTime();
 	float TimeAccumulated = 0;
 
 	MSG msg;
@@ -306,7 +304,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			DispatchMessage(&msg);
 		}
 
-		float NewTime = Sys_FloatTime();
+		float NewTime = FloatTime();
 		Running = CalculateScreen(NewTime - PrevTime);
 
 		//put check inside CalculateScreen() later... v
