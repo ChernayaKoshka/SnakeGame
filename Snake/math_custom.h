@@ -1,3 +1,3 @@
 int Abs(int val);
 
-int RandomInt10(int min, int max);
+int RandomInt(int min, int max, int divisibleBy);

@@ -12,7 +12,7 @@ int GetNumBetween(int min, int max)
 	return (rand() % max) + min;
 }
 
-int RandomInt10(int min, int max)
+int RandomInt(int min, int max, int divisibleBy)
 {
-	return (GetNumBetween(min, max)/10) * 10;
+	return (GetNumBetween(min, max)/divisibleBy) * divisibleBy;
 }
