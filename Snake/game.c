@@ -51,6 +51,20 @@ float Sys_FloatTime()
 	return (float)GTimePassed;
 }
 
+BOOL BodyContainsPoint(POINT p)
+{
+	for (int i = 0; i < queue.count; i++)
+	{
+		int index = CalculateIndex(i + 1);
+		if (p.x == queue.stackArray[index].x &&
+			p.y == queue.stackArray[index].y)
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 BOOL CheckCollission()
 {
 	//border check
@@ -67,8 +81,12 @@ BOOL CheckCollission()
 	if (player.pos.x == food.x && player.pos.y == food.y)
 	{
 		push(player.pos);
-		food.x = RandomInt10(0, BufferWidth - FoodWidth);
-		food.y = RandomInt10(0, BufferHeight - FoodHeight);
+		do
+		{
+			food.x = RandomInt(0, BufferWidth - FoodWidth, FoodWidth);
+			food.y = RandomInt(0, BufferHeight - FoodHeight, FoodHeight);
+		} while (BodyContainsPoint(food)); //prevents spawn inside body
+
 		//just ate, no need for collission
 		skipNextCollission = TRUE;
 		player.length++;
@@ -78,12 +96,12 @@ BOOL CheckCollission()
 
 	if (!skipNextCollission)
 	{
-		for (int i = 1; i < queue.count+1; i++)
+		for (int i = 1; i < queue.count + 1; i++)
 		{
 			if (queue.count == 1) break;
-			int index = CalculateIndex(i)-1;
+			int index = CalculateIndex(i) - 1;
 			if (index == queue.front) continue;
-			if (player.pos.x == queue.stackArray[index].x && 
+			if (player.pos.x == queue.stackArray[index].x &&
 				player.pos.y == queue.stackArray[index].y)
 			{
 				return FALSE;
@@ -103,7 +121,7 @@ int CalculateScreen(float timestep)
 		xPos = 50;
 	TextOutW(dcWindow, xPos, 0, (LPCWSTR)&buf, len);
 
-	if (timestep < TIMESTEP) 
+	if (timestep < TIMESTEP)
 		return TRUE;
 
 	memset(BackBuffer, 0xFF, BufferWidth * BufferHeight * 4); //4 = size of integer
@@ -130,7 +148,7 @@ int CalculateScreen(float timestep)
 	//draw
 	for (int i = 0; i < queue.count; i++)
 	{
-		int index = CalculateIndex(i+1);
+		int index = CalculateIndex(i + 1);
 		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FoodWidth, FoodHeight, 0, BackBuffer, BufferWidth, BufferHeight);
 	}
 
@@ -158,7 +176,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_KEYDOWN:
-		if (lockDirection && wParam != VK_ESCAPE) return;
+		if (lockDirection && wParam != VK_ESCAPE) return Result;
 		switch (wParam)
 		{
 		case VK_LEFT:
@@ -183,7 +201,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		case VK_DOWN:
-			if (player.direction != Up) 
+			if (player.direction != Up)
 			{
 				lockDirection = TRUE;
 				player.direction = Down;
@@ -197,9 +215,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_ERASEBKGND:
 		return TRUE;
 	case WM_CLOSE:
-		exit(0);
 	case WM_QUIT:
-		exit(0);
+		Running = FALSE;
+		return Result;
 		break;
 	case WM_COMMAND:
 		return Result;
@@ -244,7 +262,7 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nShowCmd, int width, int height)
 		hInstance,
 		0);
 
-	if (!hwndWindow) 
+	if (!hwndWindow)
 		return FALSE;
 
 	BitMapInfo.bmiHeader.biSize = sizeof(BitMapInfo.bmiHeader);
@@ -256,22 +274,22 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nShowCmd, int width, int height)
 
 	dcWindow = GetDC(hwndWindow);
 
-	BackBuffer = (int*)malloc(width*height*4);
+	BackBuffer = (int*)malloc(width*height * 4);
 
 	return TRUE;
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-	#if DEBUG
-		OpenLog();
-	#endif
+#if DEBUG
+	OpenLog();
+#endif
 
 	if (!CreateGameWindow(hInstance, nShowCmd, BufferWidth, BufferHeight))
 		return EXIT_FAILURE;
 
-	food.x = RandomInt10(0, BufferWidth - FoodWidth);
-	food.y = RandomInt10(0, BufferHeight - FoodHeight);
+	food.x = RandomInt(0, BufferWidth - FoodWidth, FoodWidth);
+	food.y = RandomInt(0, BufferHeight - FoodHeight, FoodHeight);
 
 	Sys_InitFloatTime();
 
@@ -292,7 +310,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		Running = CalculateScreen(NewTime - PrevTime);
 
 		//put check inside CalculateScreen() later... v
-		if(NewTime-PrevTime>TIMESTEP)PrevTime = NewTime;
+		if (NewTime - PrevTime > TIMESTEP)PrevTime = NewTime;
 	}
 
 	return EXIT_SUCCESS;
