@@ -85,7 +85,7 @@ BOOL CheckCollission()
 			food.y = RandomInt(0, BUFFER_HEIGHT - FOOD_HEIGHT, FOOD_HEIGHT);
 		} while (BodyContainsPoint(food)); //prevents spawn inside body
 
-		//just ate, no need for collission
+										   //just ate, no need for collission
 		skipNextCollission = TRUE;
 		player.length++;
 	}
@@ -121,6 +121,7 @@ int CalculateScreen(float timestep)
 
 	if (timestep < TIMESTEP)
 		return TRUE;
+
 
 	memset(BackBuffer, 0xFF, BUFFER_WIDTH * BUFFER_HEIGHT * 4); //4 = size of integer
 
@@ -292,7 +293,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	InitFloatTime();
 
 	float PrevTime = InitFloatTime();
-	float TimeAccumulated = 0;
 
 	MSG msg;
 
@@ -305,12 +305,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 
 		float NewTime = FloatTime();
+
 		Running = CalculateScreen(NewTime - PrevTime);
 
 		//put check inside CalculateScreen() later... v
-		if (NewTime - PrevTime > TIMESTEP)PrevTime = NewTime;
+		if (NewTime - PrevTime > TIMESTEP) PrevTime = NewTime;
 	}
 
 	return EXIT_SUCCESS;
 }
-
