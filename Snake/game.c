@@ -23,6 +23,8 @@ static double GTimePassed = 0;
 static float SecondsPerTick = 0;
 static __int64 GTimeCount = 0;
 
+int snakeColor = 0;
+
 float InitFloatTime()
 {
 	LARGE_INTEGER Frequency;
@@ -78,6 +80,7 @@ BOOL CheckCollission()
 	//food check
 	if (player.pos.x == food.x && player.pos.y == food.y)
 	{
+		snakeColor = RGB(rand() % 255, rand() % 255, rand() % 255);
 		push(player.pos);
 		do
 		{
@@ -116,6 +119,9 @@ int CalculateScreen(float timestep)
 	int len = lstrlenW((LPCWSTR)&buf);
 	int xPos = 0;
 	if (food.x > 0 && food.x < 50 && food.y == 0)
+		xPos = 50; 
+
+	if (player.pos.x > 0 && player.pos.x < 50 && player.pos.y == 0)
 		xPos = 50;
 	TextOutW(dcWindow, xPos, 0, (LPCWSTR)&buf, len);
 
@@ -148,7 +154,7 @@ int CalculateScreen(float timestep)
 	for (int i = 0; i < queue.count; i++)
 	{
 		int index = CalculateIndex(i + 1);
-		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FOOD_WIDTH, FOOD_HEIGHT, 0, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
+		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FOOD_WIDTH, FOOD_HEIGHT, snakeColor, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
 	}
 
 	BOOL lost = CheckCollission();
