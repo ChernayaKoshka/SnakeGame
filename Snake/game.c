@@ -24,6 +24,7 @@ static float SecondsPerTick = 0;
 static __int64 GTimeCount = 0;
 
 int snakeColor = 0;
+int backColor = 0x00FFFFFF;
 
 float InitFloatTime()
 {
@@ -81,6 +82,7 @@ BOOL CheckCollission()
 	if (player.pos.x == food.x && player.pos.y == food.y)
 	{
 		snakeColor = RGB(rand() % 255, rand() % 255, rand() % 255);
+		backColor = RGB(rand() % 255, rand() % 255, rand() % 255);
 		push(player.pos);
 		do
 		{
@@ -129,7 +131,8 @@ int CalculateScreen(float timestep)
 		return TRUE;
 
 
-	memset(BackBuffer, 0xFF, BUFFER_WIDTH * BUFFER_HEIGHT * 4); //4 = size of integer
+	memset(BackBuffer, 0, BUFFER_WIDTH * BUFFER_HEIGHT * 4); //4 = size of integer
+	DrawRect(0, 0, BUFFER_WIDTH, BUFFER_HEIGHT, backColor, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
 
 	//move player
 	switch (player.direction)
@@ -184,28 +187,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (lockDirection && wParam != VK_ESCAPE) return Result;
 		switch (wParam)
 		{
-		case VK_LEFT:
+		case VK_LEFT: case 0x41:
 			if (player.direction != Right)
 			{
 				lockDirection = TRUE;
 				player.direction = Left;
 			}
 			break;
-		case VK_RIGHT:
+		case VK_RIGHT: case 0x44:
 			if (player.direction != Left)
 			{
 				lockDirection = TRUE;
 				player.direction = Right;
 			}
 			break;
-		case VK_UP:
+		case VK_UP: case 0x57:
 			if (player.direction != Down)
 			{
 				lockDirection = TRUE;
 				player.direction = Up;
 			}
 			break;
-		case VK_DOWN:
+		case VK_DOWN: case 0x53:
 			if (player.direction != Up)
 			{
 				lockDirection = TRUE;
