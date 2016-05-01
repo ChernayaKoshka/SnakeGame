@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <stdio.h>
+#include <time.h>
 #include "math_custom.h"
 #include "drawing.h"
 #include "game.h"
@@ -25,6 +26,11 @@ static __int64 GTimeCount = 0;
 
 int snakeColor = 0;
 int backColor = 0x00FFFFFF;
+int foodColor = 0;
+
+#if FOOD_ADDED_TO_BODY
+int bodyColors[MaxQueueSize] = { 0 };
+#endif
 
 float InitFloatTime()
 {
@@ -81,9 +87,16 @@ BOOL CheckCollission()
 	//food check
 	if (player.pos.x == food.x && player.pos.y == food.y)
 	{
+#if FOOD_ADDED_TO_BODY
+		bodyColors[player.length + 1] = foodColor;
+#endif
+
 		snakeColor = RGB(rand() % 255, rand() % 255, rand() % 255);
 		backColor = RGB(rand() % 255, rand() % 255, rand() % 255);
+		foodColor = RGB(rand() % 255, rand() % 255, rand() % 255);
+
 		push(player.pos);
+
 		do
 		{
 			food.x = RandomInt(0, BUFFER_WIDTH - FOOD_WIDTH, FOOD_WIDTH);
@@ -121,7 +134,7 @@ int CalculateScreen(float timestep)
 	int len = lstrlenW((LPCWSTR)&buf);
 	int xPos = 0;
 	if (food.x > 0 && food.x < 50 && food.y == 0)
-		xPos = 50; 
+		xPos = 50;
 
 	if (player.pos.x > 0 && player.pos.x < 50 && player.pos.y == 0)
 		xPos = 50;
@@ -157,7 +170,12 @@ int CalculateScreen(float timestep)
 	for (int i = 0; i < queue.count; i++)
 	{
 		int index = CalculateIndex(i + 1);
+
+#if FOOD_ADDED_TO_BODY
+		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FOOD_WIDTH, FOOD_HEIGHT, bodyColors[i], BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
+#else
 		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FOOD_WIDTH, FOOD_HEIGHT, snakeColor, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
+#endif
 	}
 
 	BOOL lost = CheckCollission();
@@ -165,7 +183,7 @@ int CalculateScreen(float timestep)
 	//pop back square of body
 	pop();
 	//draw food :)
-	DrawRect(food.x, food.y, FOOD_WIDTH, FOOD_HEIGHT, 0, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
+	DrawRect(food.x, food.y, FOOD_WIDTH, FOOD_HEIGHT, foodColor, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
 
 	//display image
 	StretchDIBits(dcWindow,
@@ -299,9 +317,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	food.x = RandomInt(0, BUFFER_WIDTH - FOOD_WIDTH, FOOD_WIDTH);
 	food.y = RandomInt(0, BUFFER_HEIGHT - FOOD_HEIGHT, FOOD_HEIGHT);
 
+	backColor = RGB(rand() % 255, rand() % 255, rand() % 255);
+	foodColor = RGB(rand() % 255, rand() % 255, rand() % 255);
+
 	InitFloatTime();
 
 	float PrevTime = InitFloatTime();
+	srand((unsigned int)time(NULL));
 
 	MSG msg;
 
@@ -319,6 +341,20 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		//put check inside CalculateScreen() later... v
 		if (NewTime - PrevTime > TIMESTEP) PrevTime = NewTime;
+	}
+
+	wchar_t buf[20];
+	swprintf_s(buf, 20, L"Score: %d", player.length);
+	int len = lstrlenW((LPCWSTR)&buf);
+	Running = TRUE;
+	while (Running)
+	{
+		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		TextOutW(dcWindow, 0, 0, (LPCWSTR)&buf, len);
 	}
 
 	return EXIT_SUCCESS;

@@ -18,5 +18,3 @@ BOOL push(POINT p);
 POINT pop();
 
 int CalculateIndex(int count);
-void LogCalculateIndex(int count);
-void OpenLog();
