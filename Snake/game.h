@@ -1,6 +1,6 @@
 #pragma once
 
-#define FOOD_ADDED_TO_BODY 0
+#define FOOD_ADDED_TO_BODY 1
 #define PSYCHADELIC 1
 
 #define FOOD_WIDTH 20

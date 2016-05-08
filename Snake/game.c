@@ -28,7 +28,7 @@ static float SecondsPerTick = 0;
 static __int64 GTimeCount = 0;
 
 #if PSYCHADELIC
-double snakeAngle = 0.0;
+double snakeAngle = M_PI-0.25;
 double backgroundAngle = M_PI;
 double foodAngle = M_PI+0.5;
 #else
@@ -128,7 +128,7 @@ BOOL CheckCollission()
 #endif
 
 #if FOOD_ADDED_TO_BODY && PSYCHADELIC
-		bodyAngles[player.length + 1] = foodAngle;
+		bodyAngles[player.length + 1] = foodAngle + player.length;
 #endif
 
 #if PSYCHADELIC == 0
@@ -214,6 +214,10 @@ int CalculateScreen(float timestep)
 	push(player.pos);
 	//draw
 
+#if PSYCHADELIC && FOOD_ADDED_TO_BODY == 0
+	int bodyColor = GetColor(&snakeAngle);
+#endif
+
 	for (int i = 0; i < queue.count; i++)
 	{
 		int index = CalculateIndex(i + 1);
@@ -223,7 +227,7 @@ int CalculateScreen(float timestep)
 #endif
 
 #if PSYCHADELIC && FOOD_ADDED_TO_BODY == 0
-		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FOOD_WIDTH, FOOD_HEIGHT, GetColor(&snakeAngle), BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
+		DrawRect(queue.stackArray[index].x, queue.stackArray[index].y, FOOD_WIDTH, FOOD_HEIGHT,bodyColor, BackBuffer, BUFFER_WIDTH, BUFFER_HEIGHT);
 #endif
 
 #if PSYCHADELIC && FOOD_ADDED_TO_BODY
